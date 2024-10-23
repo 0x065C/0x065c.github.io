@@ -1,0 +1,12 @@
+# Index
+- [[Red Team]]
+	- [[Scripting]]
+		- [[BASH]]
+		- [[C++]]
+		- [[CMD]]
+		- [[5. Scripting/PowerShell/PowerShell]]
+		- [[Python]]
+		- [[Servers]]
+		- [[SVG Payloads]]
+		- [[VisualBasic]]
+		- [[XML]]
