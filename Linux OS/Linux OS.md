@@ -1,3 +1,0 @@
-# Index
-- [[Fundamentals]]
-	- [[Linux OS]]
