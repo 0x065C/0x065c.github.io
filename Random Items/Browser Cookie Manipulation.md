@@ -1,0 +1,1 @@
+Developer tools > Application > Cookies > Right click field > Edit
