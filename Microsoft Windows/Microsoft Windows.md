@@ -1,3 +1,0 @@
-# Index
-- [[Fundamentals]]
-	- [[Microsoft Windows]]
