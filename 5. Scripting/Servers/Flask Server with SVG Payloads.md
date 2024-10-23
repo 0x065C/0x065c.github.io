@@ -1,6 +1,8 @@
-#  Step 1: Generate SSL Certificates
+# Flask Server with SVG Payloads
 
-#### OpenSSL Self-Signed Certificates
+## Step 1: Generate SSL Certificates
+
+**OpenSSL Self-Signed Certificates**
 
 ```
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
@@ -8,15 +10,18 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 
 OR
 
-#### Using a Trusted Certificate Authority (Let's Encrypt)
-Prerequisites
-- You need a domain name for your server.
-- Your server should be accessible over the internet.
+**Using a Trusted Certificate Authority (Let's Encrypt)**
 
-#### Install Certbot
+Prerequisites
+
+* You need a domain name for your server.
+* Your server should be accessible over the internet.
+
+**Install Certbot**
+
 Certbot is a tool that automates the process of obtaining and renewing SSL certificates from Let's Encrypt.
 
-- Install Certbot on Ubuntu:
+* Install Certbot on Ubuntu:
 
 ```
 sudo apt update
@@ -24,7 +29,7 @@ sudo apt install certbot
 sudo apt install python3-certbot-nginx
 ```
 
- - Install Certbot on CentOS/RHEL:
+* Install Certbot on CentOS/RHEL:
 
 ```
 sudo yum install epel-release
@@ -32,13 +37,14 @@ sudo yum install certbot
 sudo yum install python3-certbot-nginx
 ```
 
-- Install Certbot on macOS:
+* Install Certbot on macOS:
 
 ```
 brew install certbot
 ```
 
-#### Obtain an SSL Certificate
+**Obtain an SSL Certificate**
+
 Use Certbot to obtain an SSL certificate for your domain. This example uses the standalone mode, which requires stopping your web server temporarily.
 
 1. Stop your web server (if running):
@@ -47,8 +53,7 @@ Use Certbot to obtain an SSL certificate for your domain. This example uses the 
 sudo systemctl stop nginx
 ```
 
-2. Run Certbot to obtain the certificate:
-Replace your-domain.com with your actual domain name.
+2. Run Certbot to obtain the certificate: Replace your-domain.com with your actual domain name.
 
 ```
 sudo certbot certonly --standalone -d your-domain.com
@@ -62,7 +67,8 @@ sudo systemctl start nginx
 
 The certificates are usually saved in the /etc/letsencrypt/live/your-domain.com/ directory.
 
-# Step 2: Configure Flask to Use the Certificate
+## Step 2: Configure Flask to Use the Certificate
+
 Update your Flask application to use the SSL certificate
 
 1. Modify your Flask application (app.py) to use the certificate files obtained from Let's Encrypt.
@@ -100,13 +106,15 @@ if __name__ == '__main__':
 sudo chmod +x server.py
 ```
 
-3. Run the server script  
- 
+3. Run the server script\
+
+
 ```
 python3 server.py
 ```
 
-# Step 3: Create and Serve the SVG File Over HTTPS
+## Step 3: Create and Serve the SVG File Over HTTPS
+
 Ensure your server is properly set up to serve the SVG file over HTTPS.
 
 1. Create the SVG File (data-collector.svg):
@@ -237,11 +245,8 @@ Ensure your server is properly set up to serve the SVG file over HTTPS.
 </svg>
 ```
 
-2. Serve the SVG File Over HTTPS:
-Ensure the SVG file is served from your domain over HTTPS. You can place the SVG file in a directory served by your web server (e.g., Nginx or Apache) and ensure it is accessible over HTTPS.
-
-3. Open the SVG File in Your Browser:
-Open your web browser and navigate to the location of the SVG file served over HTTPS, for example:
+2. Serve the SVG File Over HTTPS: Ensure the SVG file is served from your domain over HTTPS. You can place the SVG file in a directory served by your web server (e.g., Nginx or Apache) and ensure it is accessible over HTTPS.
+3. Open the SVG File in Your Browser: Open your web browser and navigate to the location of the SVG file served over HTTPS, for example:
 
 ```
 https[:]//your-domain.com/path/to/data-collector.svg

